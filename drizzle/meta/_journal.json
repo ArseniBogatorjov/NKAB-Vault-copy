@@ -1,0 +1,34 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1774516688979,
+      "tag": "0000_thankful_reaper",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1774518264790,
+      "tag": "0001_friendly_brother_voodoo",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1774521038028,
+      "tag": "0002_abnormal_giant_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1775025600000,
+      "tag": "0003_add_post_title",
+      "breakpoints": true
+    }
+  ]
+}

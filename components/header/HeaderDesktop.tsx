@@ -1,0 +1,143 @@
+"use client";
+
+import Link from "next/link";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+
+import { cn } from "@/lib/utils";
+import type { HeaderUser } from "./types";
+
+type HeaderDesktopProps = {
+  isPending: boolean;
+  user?: HeaderUser | null;
+  showAdminDashboardLink: boolean;
+  showModeratorDashboardLink: boolean;
+  onSignOut: () => void;
+};
+
+/**
+ * Header Desktop Component.
+ * Handles the navigation bar for large screens, including the user profile dropdown.
+ * Role-based dashboard links are conditionally rendered for Admins and Moderators.
+ */
+export function HeaderDesktop({
+  isPending,
+  user,
+  showAdminDashboardLink,
+  showModeratorDashboardLink,
+  onSignOut,
+}: HeaderDesktopProps) {
+  // Loading state skeleton for the profile menu
+  if (isPending) {
+    return <div className="hidden size-8 animate-pulse rounded-full bg-muted lg:block" />;
+  }
+
+  // Auth state: Not logged in
+  if (!user) {
+    return (
+      <div className="hidden items-center gap-4 lg:flex">
+        <Link href="/sign-in" className="text-base text-foreground">
+          Sign In
+        </Link>
+        <Link href="/sign-up" className="text-base text-foreground">
+          Sign Up
+        </Link>
+      </div>
+    );
+  }
+
+  // Auth state: Logged in
+  return (
+    <div className="hidden h-8 w-8 lg:block">
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="rounded-full h-8 w-8 outline-none ring-ring/50 focus-visible:ring-3"
+            aria-label="Open profile menu"
+          >
+            {/* Pro users get a distinct visual border around their avatar */}
+            <Avatar className={cn(user.isPro && "outline-1 outline-pro-bg outline-offset-2 border-none")}>
+              {user.image ? <AvatarImage src={user.image} alt={user.name || ""} /> : null}
+              <AvatarFallback>{user.name?.charAt(0) || user.email?.charAt(0)}</AvatarFallback>
+            </Avatar>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" className="flex w-48 flex-col gap-0.5 p-1.5">
+          <DropdownMenuItem asChild>
+            <Link
+              href="/profile"
+              className="w-full cursor-pointer rounded-sm px-2 py-1.5 text-base font-medium transition-colors hover:bg-muted hover:text-primary"
+            >
+              Profile
+            </Link>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem asChild>
+            <Link
+              href="/new-post"
+              className="w-full cursor-pointer rounded-sm px-2 py-1.5 text-base font-medium transition-colors hover:bg-muted hover:text-primary"
+            >
+              Add Post
+            </Link>
+          </DropdownMenuItem>
+
+          {/* Conditional Administrative Dashboard Links */}
+          {showAdminDashboardLink ? (
+            <DropdownMenuItem asChild>
+              <Link
+                href="/admin"
+                className="w-full cursor-pointer rounded-sm px-2 py-1.5 text-base font-medium transition-colors hover:bg-muted hover:text-primary"
+              >
+                Admin Dashboard
+              </Link>
+            </DropdownMenuItem>
+          ) : null}
+
+          {showModeratorDashboardLink ? (
+            <DropdownMenuItem asChild>
+              <Link
+                href="/moderator"
+                className="w-full cursor-pointer rounded-sm px-2 py-1.5 text-base font-medium transition-colors hover:bg-muted hover:text-primary"
+              >
+                Moderator Dashboard
+              </Link>
+            </DropdownMenuItem>
+          ) : null}
+
+          <Separator className="my-1" />
+
+          <DropdownMenuItem asChild>
+            <Link
+              href="/subscription"
+              className="w-full cursor-pointer rounded-sm px-2 py-1.5 text-base font-medium transition-colors hover:bg-muted hover:text-primary"
+            >
+              Subscription
+            </Link>
+          </DropdownMenuItem>
+
+          <Separator className="my-1" />
+
+          <DropdownMenuItem
+            className="cursor-pointer rounded-sm px-2 py-1.5 font-medium text-destructive transition-colors hover:bg-muted hover:text-destructive focus:bg-muted focus:text-destructive"
+            onSelect={(event) => {
+              event.preventDefault();
+              onSignOut();
+            }}
+          >
+            Sign out
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}

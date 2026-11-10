@@ -1,0 +1,76 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import { Play } from "lucide-react";
+
+/**
+ * Post Media Preview Component.
+ * Displays a thumbnail for post media (images or videos).
+ * Features: Automatic video duration detection and file count indicators.
+ */
+export function PostMediaPreview({ src, alt, isVideo, fileCount = 1 }: { src: string; alt: string; isVideo: boolean; fileCount?: number }) {
+  const [duration, setDuration] = useState<number | null>(null);
+
+  /**
+   * Video Metadata Effect:
+   * Dynamically loads video metadata to extract and display the duration.
+   */
+  useEffect(() => {
+    if (isVideo) {
+      const video = document.createElement("video");
+      video.src = src.replace(/\.mov$/i, ".mp4"); // Ensure compatible format for metadata extraction
+      video.preload = "metadata";
+      video.onloadedmetadata = () => {
+        setDuration(video.duration);
+      };
+    }
+  }, [src, isVideo]);
+
+  // Formats seconds into M:SS
+  const formatDuration = (d: number) => {
+    if (!Number.isFinite(d)) return "0:00";
+    const m = Math.floor(d / 60);
+    const s = Math.floor(d % 60);
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
+  // Logic: For videos, use a static frame/thumbnail URL
+  const imageUrl = isVideo ? src.replace(/\.[^/.]+$/, ".jpg") : src;
+
+  return (
+    <div className="relative overflow-hidden rounded-lg border border-border/40 bg-black/5 aspect-3/2 w-full">
+      <Image
+        src={imageUrl}
+        alt={alt}
+        className="h-full w-full object-cover"
+        width={780}
+        height={520}
+      />
+      
+      {/* File counter for multi-media posts */}
+      {fileCount > 1 && (
+        <div className="absolute right-2 top-2 z-10 rounded-md bg-black/65 px-2 py-1 text-xs font-bold tracking-wider text-white">
+          1/{fileCount}
+        </div>
+      )}
+
+      {/* Video Overlay: centralized play icon and duration badge */}
+      {isVideo && (
+        <>
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-black/50 shadow-sm backdrop-blur transition-transform group-hover:scale-110">
+              <Play className="ml-1 h-6 w-6 fill-white text-white" />
+            </div>
+          </div>
+          {duration !== null && (
+            <div className="absolute bottom-2 right-2 rounded bg-black/65 px-1.5 py-0.5 text-xs font-semibold tracking-wide text-white">
+              {formatDuration(duration)}
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  );
+}
+

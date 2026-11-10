@@ -1,0 +1,94 @@
+import type { Metadata } from "next";
+import { Geist_Mono } from "next/font/google";
+import "./globals.css";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import { ThemeProvider } from "@/components/theme-provider";
+import { Toaster } from "@/components/ui/sonner"
+import { getSession } from "@/lib/auth/auth-server";
+import { ProfileSetupModal } from "@/components/ProfileSetupModal";
+import { db } from "@/lib/db/db";
+import { user, RoleId, SUBSCRIPTION_STATUSES } from "@/lib/db/auth-schema";
+import { eq } from "drizzle-orm";
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+});
+
+export const metadata: Metadata = {
+  title: "NKAB Vault",
+  description: "Secure and premium content sharing platform",
+};
+
+/**
+ * Root Layout Component.
+ * The entry point for the application's UI structure. Handles global state providers, 
+ * authentication session injection, and consistent header/footer rendering.
+ */
+export default async function RootLayout({
+  children,
+}: Readonly<{
+  children: React.ReactNode;
+}>) {
+  const session = await getSession();
+  
+  // Fetch detailed user info (role) if a session exists
+  const dbUser = session?.user?.id
+    ? await db.query.user.findFirst({
+        where: eq(user.id, session.user.id),
+        columns: {
+          roleId: true,
+        },
+      })
+    : null;
+
+  // Check for active PRO subscription to display appropriate UI badges in the header
+  let isPro = false;
+  if (session?.user?.id) {
+    const activeSub = await db.query.subscriptions.findFirst({
+      where: (subs, { eq, and, gt }) => and(
+        eq(subs.userId, session.user.id),
+        eq(subs.statusId, SUBSCRIPTION_STATUSES.ACTIVE),
+        gt(subs.currentPeriodEnd, new Date())
+      )
+    });
+    isPro = !!activeSub;
+  }
+
+  return (
+    <html lang="en" className={`${geistMono.className} h-full`} suppressHydrationWarning>
+      <body className="h-full">
+        {/* Global Theme Provider (Dark/Light mode support) */}
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <div className="flex min-h-screen flex-col">
+            <div className="shrink-0">
+              {/* Navigation Header with role-based links */}
+              <Header userRoleId={dbUser?.roleId as RoleId ?? null} isPro={isPro} />
+            </div>
+            
+            <main className="flex flex-1 flex-col">
+              {children}
+            </main>
+            
+            <div className="shrink-0">
+              <Footer />
+            </div>
+          </div>
+
+          {/* Toast notifications provider */}
+          <Toaster />
+
+          {/* Mandatory profile setup modal for new users */}
+          {session?.user && <ProfileSetupModal user={session.user} />}
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}
+

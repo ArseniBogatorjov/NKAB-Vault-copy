@@ -1,0 +1,177 @@
+"use client";
+
+import Link from "next/link";
+import { Menu, X } from "lucide-react";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import type { HeaderUser } from "./types";
+
+type HeaderMobileProps = {
+  isPending: boolean;
+  user?: HeaderUser | null;
+  isSidebarOpen: boolean;
+  setIsSidebarOpen: (open: boolean) => void;
+  showAdminDashboardLink: boolean;
+  showModeratorDashboardLink: boolean;
+  onSignOut: () => void;
+};
+
+/**
+ * Header Mobile Component.
+ * Provides a responsive sidebar navigation for small screens.
+ * Features a slide-out menu with a focus backdrop and role-based links.
+ */
+export function HeaderMobile({
+  isPending,
+  user,
+  isSidebarOpen,
+  setIsSidebarOpen,
+  showAdminDashboardLink,
+  showModeratorDashboardLink,
+  onSignOut,
+}: HeaderMobileProps) {
+  return (
+    <div className="lg:hidden">
+      {/* Sidebar Trigger (Hamburger Menu) */}
+      {!isPending ? (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsSidebarOpen(true)}
+          className="flex h-8 w-8 items-center justify-center rounded-md outline-none ring-ring/50 focus-visible:ring-3"
+          aria-label="Open sidebar"
+        >
+          <Menu className="size-5" />
+        </Button>
+      ) : null}
+
+      {/* Focus Backdrop */}
+      {isSidebarOpen ? (
+        <div
+          className="fixed inset-0 z-50 bg-background/80 backdrop-blur-sm"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      ) : null}
+
+      {/* Slide-out Sidebar Container */}
+      <div
+        className={`fixed inset-y-0 right-0 z-50 flex h-full w-64 flex-col bg-background p-4 shadow-lg transition-transform duration-300 ${isSidebarOpen ? "translate-x-0" : "translate-x-full"}`}
+      >
+        <div className="flex-1 overflow-y-auto">
+          {/* Header section with close button */}
+          <div className="mb-6 flex items-center justify-between">
+            <span className="text-lg font-bold">Menu</span>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsSidebarOpen(false)}
+              className="rounded-md"
+            >
+              <X className="size-5" />
+            </Button>
+          </div>
+
+          <nav className="flex flex-col">
+            {/* Unauthenticated Links */}
+            {!user ? (
+              <>
+                <Link
+                  href="/sign-in"
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="text-lg font-medium transition-colors hover:text-primary"
+                >
+                  Sign In
+                </Link>
+                <Link
+                  href="/sign-up"
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="text-lg font-medium transition-colors hover:text-primary"
+                >
+                  Sign Up
+                </Link>
+              </>
+            ) : (
+              // Authenticated Links
+              <div className="flex flex-col gap-2">
+                <Link
+                  href="/profile"
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="rounded-sm px-2 py-1 font-medium transition-colors hover:bg-muted hover:text-primary"
+                >
+                  Profile
+                </Link>
+                <Link
+                  href="/new-post"
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="rounded-sm px-2 py-1  font-medium transition-colors hover:bg-muted hover:text-primary"
+                >
+                  Add Post
+                </Link>
+                {/* Administrative Gated Links */}
+                {showAdminDashboardLink ? (
+                  <Link
+                    href="/admin"
+                    onClick={() => setIsSidebarOpen(false)}
+                    className="rounded-sm px-2 py-1 font-medium transition-colors hover:bg-muted hover:text-primary"
+                  >
+                    Admin Dashboard
+                  </Link>
+                ) : null}
+                {showModeratorDashboardLink ? (
+                  <Link
+                    href="/moderator"
+                    onClick={() => setIsSidebarOpen(false)}
+                    className="rounded-sm px-2 py-1 font-medium transition-colors hover:bg-muted hover:text-primary"
+                  >
+                    Moderator Dashboard
+                  </Link>
+                ) : null}
+                <Separator className="my-1" />
+                <Link
+                  href="/subscription"
+                  onClick={() => setIsSidebarOpen(false)}
+                  className="rounded-sm px-2 py-1  font-medium transition-colors hover:bg-muted hover:text-primary"
+                >
+                  Subscription
+                </Link>
+                <Separator className="my-1" />
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setIsSidebarOpen(false);
+                    onSignOut();
+                  }}
+                  className="w-full justify-start rounded-sm px-2 py-1 text-base font-medium transition-colors hover:bg-muted hover:text-destructive focus:bg-muted focus:text-destructive active:bg-muted active:text-destructive text-destructive lg:text-foreground lg:hover:text-destructive"
+                >
+                  Sign out
+                </Button>
+              </div>
+            )}
+          </nav>
+        </div>
+
+        {/* Footer: User Identity Section */}
+        {user ? (
+          <div className="mt-auto border-t pt-4">
+            <Link
+              href="/profile"
+              onClick={() => setIsSidebarOpen(false)}
+              className="flex items-center gap-3 rounded-md p-2 transition-colors hover:bg-muted"
+            >
+              <Avatar size="sm" className={cn("size-12", user.isPro && "outline-1 outline-pro-bg outline-offset-2 border-none")}>
+                {user.image ? <AvatarImage src={user.image} alt={user.name || ""} /> : null}
+                <AvatarFallback>{user.name?.charAt(0) ?? user.email?.charAt(0) ?? "U"}</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col">
+                <span className="text-base font-medium">{user.name || "User"}</span>
+              </div>
+            </Link>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
