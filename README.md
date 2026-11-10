@@ -1,5 +1,6 @@
 # NKAB-Vault
 
+## THIS IS COPY FROM ORIGINAL REPOSITORY - [link](https://github.com/fosuri/NKAB-Vault)
 ---
 
 **Language / Keel:** [English](README.md) | [Eesti](README.et.md)
